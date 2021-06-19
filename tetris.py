@@ -1,3 +1,12 @@
+# PyInstaller stuff
+import os, sys
+def resource_path(relative_path):
+	try:
+		base_path = sys._MEIPASS
+	except:
+		base_path = os.path.abspath(".")
+	return os.path.join(base_path, relative_path)
+
 import random
 
 class Mino:
@@ -202,7 +211,7 @@ class Tetris:
 				return True
 		return False
 
-import sys, pygame
+import pygame
 pygame.init()
 pygame.font.init()
 myfont = pygame.font.SysFont("Comic Sans MS", 30)
@@ -221,7 +230,7 @@ neonred = 255, 0, 0
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Twotris")
 
-ball = pygame.image.load("ball.png").convert()
+ball = pygame.image.load(resource_path("ball.png")).convert()
 ball.set_colorkey(ball.get_at((0,0)))
 ballrect = ball.get_rect()
 
