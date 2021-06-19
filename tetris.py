@@ -203,7 +203,12 @@ ballrect = ball.get_rect()
 tetris = Tetris()
 last_piece_drop = 0
 paused = False
-
+dacus_left = None
+dacus_right = None
+dacus_down = None
+DACUS_DELAY = 167
+DACUS_REPEAT = 27
+FALL_SPEED = 100
 while 1:
 	ballrect = ballrect.move(speed)
 	if ballrect.left < 0 or ballrect.right > width:
@@ -291,13 +296,13 @@ while 1:
 				paused = not paused
 			elif ev.key == pygame.K_LEFT:
 				tetris.attempt_action(lambda x: x.move(-1, 0))
-				dacus_left = ticks
+				dacus_left = ticks + DACUS_DELAY
 			elif ev.key == pygame.K_RIGHT:
 				tetris.attempt_action(lambda x: x.move(1, 0))
-				dacus_right = ticks
+				dacus_right = ticks + DACUS_DELAY
 			elif ev.key == pygame.K_DOWN:
 				tetris.attempt_action(lambda x: x.move(0, 1), True)
-				dacus_down = ticks
+				dacus_down = ticks + DACUS_DELAY
 			elif ev.key == pygame.K_UP or ev.key == pygame.K_x:
 				tetris.attempt_action(lambda x: x.rotate_cw())
 			elif ev.key == pygame.K_z or ev.key == pygame.K_LCTRL:
@@ -313,15 +318,15 @@ while 1:
 				dacus_right = None
 			elif ev.key == pygame.K_DOWN:
 				dacus_down = None
-	if dacus_left is not None and ticks > dacus_left + 100:
+	if dacus_left is not None and ticks > dacus_left:
 		tetris.attempt_action(lambda x: x.move(-1, 0))
-		dacus_left = ticks
-	if dacus_right is not None and ticks > dacus_right + 100:
+		dacus_left = ticks + DACUS_REPEAT
+	if dacus_right is not None and ticks > dacus_right:
 		tetris.attempt_action(lambda x: x.move(1, 0))
-		dacus_right = ticks
-	if dacus_down is not None and ticks > dacus_down + 100:
+		dacus_right = ticks + DACUS_REPEAT
+	if dacus_down is not None and ticks > dacus_down:
 		tetris.attempt_action(lambda x: x.move(0, 1))
-		dacus_down = ticks
-	if not paused and ticks > last_piece_drop + 200:
+		dacus_down = ticks + DACUS_REPEAT
+	if not paused and ticks > last_piece_drop + FALL_SPEED:
 		tetris.attempt_action(lambda x: x.move(0, 1), True)
 		last_piece_drop = ticks
