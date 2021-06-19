@@ -280,6 +280,7 @@ while 1:
 	pygame.draw.rect(screen, white, xyxy2rect(907, 197, 1041, 921), 3) # NEXT QUEUE
 	pygame.draw.rect(screen, white, xyxy2rect(200, 98, 309, 230), 3) # HOLD
 	pygame.display.flip()
+	ticks = pygame.time.get_ticks()
 	for ev in pygame.event.get():
 		if ev.type == pygame.QUIT:
 			sys.exit()
@@ -290,10 +291,13 @@ while 1:
 				paused = not paused
 			elif ev.key == pygame.K_LEFT:
 				tetris.attempt_action(lambda x: x.move(-1, 0))
+				dacus_left = ticks
 			elif ev.key == pygame.K_RIGHT:
 				tetris.attempt_action(lambda x: x.move(1, 0))
+				dacus_right = ticks
 			elif ev.key == pygame.K_DOWN:
 				tetris.attempt_action(lambda x: x.move(0, 1), True)
+				dacus_down = ticks
 			elif ev.key == pygame.K_UP or ev.key == pygame.K_x:
 				tetris.attempt_action(lambda x: x.rotate_cw())
 			elif ev.key == pygame.K_z or ev.key == pygame.K_LCTRL:
@@ -302,7 +306,22 @@ while 1:
 				tetris.hard_drop()
 			elif ev.key == pygame.K_LSHIFT or ev.key == pygame.K_c:
 				tetris.attempt_hold()
-	ticks = pygame.time.get_ticks()
+		elif ev.type == pygame.KEYUP:
+			if ev.key == pygame.K_LEFT:
+				dacus_left = None
+			elif ev.key == pygame.K_RIGHT:
+				dacus_right = None
+			elif ev.key == pygame.K_DOWN:
+				dacus_down = None
+	if dacus_left is not None and ticks > dacus_left + 100:
+		tetris.attempt_action(lambda x: x.move(-1, 0))
+		dacus_left = ticks
+	if dacus_right is not None and ticks > dacus_right + 100:
+		tetris.attempt_action(lambda x: x.move(1, 0))
+		dacus_right = ticks
+	if dacus_down is not None and ticks > dacus_down + 100:
+		tetris.attempt_action(lambda x: x.move(0, 1))
+		dacus_down = ticks
 	if not paused and ticks > last_piece_drop + 200:
 		tetris.attempt_action(lambda x: x.move(0, 1), True)
 		last_piece_drop = ticks
