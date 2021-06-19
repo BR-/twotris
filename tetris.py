@@ -97,6 +97,13 @@ def bag_rng():
 		random.shuffle(bag)
 		for mino in bag:
 			yield Mino(mino, Mino.minos[mino])
+		if random.random() < 0.2:
+			shape = [(0,0)]
+			for x in range(4):
+				for y in range(4):
+					if (x or y) and random.random() < 0.25:
+						shape.append((x,y))
+			yield Mino("?", shape)
 
 class Tetris:
 	def __init__(self):
