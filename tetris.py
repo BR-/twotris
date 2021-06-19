@@ -148,15 +148,26 @@ class Tetris:
 						self.board[x][y2+1] = self.board[x][y2]
 		self.drop_new_piece_in()
 
-	def attempt_action(self, action, lock_if_fail=False):
+	def attempt_action(self, action, *, lock_if_fail=False, attempt_wallkick=False):
 		if self.game_over:
 			return
 		backup = self.dropping_mino.clone()
 		action(self.dropping_mino)
 		if self.check_collision():
-			self.dropping_mino = backup
-			if lock_if_fail:
-				self.lock_in()
+			if attempt_wallkick:
+				self.dropping_mino.move(-1, 0)
+				if self.check_collision():
+					self.dropping_mino.move(-1, 0)
+					if self.check_collision():
+						self.dropping_mino.move(3, 0)
+						if self.check_collision():
+							self.dropping_mino.move(1, 0)
+							if self.check_collision():
+								self.dropping_mino.move(-2, 0)
+			if self.check_collision():
+				self.dropping_mino = backup
+				if lock_if_fail:
+					self.lock_in()
 
 	def hard_drop(self):
 		if self.game_over:
@@ -301,12 +312,12 @@ while 1:
 				tetris.attempt_action(lambda x: x.move(1, 0))
 				dacus_right = ticks + DACUS_DELAY
 			elif ev.key == pygame.K_DOWN:
-				tetris.attempt_action(lambda x: x.move(0, 1), True)
+				tetris.attempt_action(lambda x: x.move(0, 1), lock_if_fail=True)
 				dacus_down = ticks + DACUS_DELAY
 			elif ev.key == pygame.K_UP or ev.key == pygame.K_x:
-				tetris.attempt_action(lambda x: x.rotate_cw())
+				tetris.attempt_action(lambda x: x.rotate_cw(), attempt_wallkick=True)
 			elif ev.key == pygame.K_z or ev.key == pygame.K_LCTRL:
-				tetris.attempt_action(lambda x: x.rotate_ccw())
+				tetris.attempt_action(lambda x: x.rotate_ccw(), attempt_wallkick=True)
 			elif ev.key == pygame.K_SPACE:
 				tetris.hard_drop()
 			elif ev.key == pygame.K_LSHIFT or ev.key == pygame.K_c:
@@ -328,5 +339,5 @@ while 1:
 		tetris.attempt_action(lambda x: x.move(0, 1))
 		dacus_down = ticks + DACUS_REPEAT
 	if not paused and ticks > last_piece_drop + FALL_SPEED:
-		tetris.attempt_action(lambda x: x.move(0, 1), True)
+		tetris.attempt_action(lambda x: x.move(0, 1), lock_if_fail=True)
 		last_piece_drop = ticks
