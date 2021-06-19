@@ -256,7 +256,10 @@ while 1:
 		h = (953 - 80) / 20
 		xx = 345 + w * x
 		yy = 80 + h * y
-		color = [False, gray, white][tetris.board[x][y] + 1]
+		if y < 0:
+			color = False
+		else:
+			color = [False, gray, white][tetris.board[x][y] + 1]
 		if color:
 			pygame.draw.rect(screen, color, (xx, yy, w, h))
 	# BOARD GRID
@@ -265,7 +268,7 @@ while 1:
 	for x in range(1, 10):
 			xx = 345 + (830 - 345) * x / 10
 			color = gray
-			if x == minx or x == maxx:
+			if x == minx or x == maxx+1:
 				color = white
 			pygame.draw.line(screen, color, (xx, 80), (xx, 953))
 	for y in range(1, 20):
