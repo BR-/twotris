@@ -221,11 +221,14 @@ DACUS_DELAY = 167
 DACUS_REPEAT = 27
 FALL_SPEED = 100
 while 1:
-	ballrect = ballrect.move(speed)
-	if ballrect.left < 0 or ballrect.right > width:
-		speed[0] = -speed[0]
-	if ballrect.top < 0 or ballrect.bottom > height:
-		speed[1] = -speed[1]
+	ticks = pygame.time.get_ticks()
+	if ticks % 3 == 0:
+		ballrect = ballrect.move(speed)
+		if ballrect.left < 0 or ballrect.right > width:
+			speed[0] = -speed[0]
+		if ballrect.top < 0 or ballrect.bottom > height:
+			speed[1] = -speed[1]
+	collision_rects = []
 
 	if tetris.game_over:
 		screen.fill(red)
@@ -241,6 +244,7 @@ while 1:
 			xx = 200 + w * x
 			yy = 98 + h * y
 			pygame.draw.rect(screen, color, (xx, yy, w, h))
+			collision_rects.append((xx, yy, w, h))
 	# NEXT PIECE
 	for x,y in tetris.piece_queue[0].get():
 		w = (1041 - 907) / 4
@@ -248,6 +252,7 @@ while 1:
 		xx = 907 + w * x
 		yy = 58 + h * y
 		pygame.draw.rect(screen, white, (xx, yy, w, h))
+		collision_rects.append((xx, yy, w, h))
 	# NEXT QUEUE
 	for ndx, piece in enumerate(tetris.piece_queue[1:]):
 		for x,y in piece.get():
@@ -256,6 +261,7 @@ while 1:
 			xx = 907 + w * x
 			yy = 197 + h * (y + 4 * ndx)
 			pygame.draw.rect(screen, gray, (xx, yy, w, h))
+			collision_rects.append((xx, yy, w, h))
 	# EXISTING GAME BOARD
 	for x in range(10):
 		for y in range(20):
@@ -266,6 +272,7 @@ while 1:
 			color = [False, gray, white][tetris.board[x][y]]
 			if color:
 				pygame.draw.rect(screen, color, (xx, yy, w, h))
+				collision_rects.append((xx, yy, w, h))
 	# DROPPING PIECE
 	for x,y in tetris.dropping_mino.get():
 		w = (830 - 345) / 10
@@ -278,6 +285,7 @@ while 1:
 			color = [False, gray, white][tetris.board[x][y] + 1]
 		if color:
 			pygame.draw.rect(screen, color, (xx, yy, w, h))
+			collision_rects.append((xx, yy, w, h))
 	# BOARD GRID
 	minx = min(sq[0] for sq in tetris.dropping_mino.get())
 	maxx = max(sq[0] for sq in tetris.dropping_mino.get())
@@ -296,7 +304,6 @@ while 1:
 	pygame.draw.rect(screen, white, xyxy2rect(907, 197, 1041, 921), 3) # NEXT QUEUE
 	pygame.draw.rect(screen, white, xyxy2rect(200, 98, 309, 230), 3) # HOLD
 	pygame.display.flip()
-	ticks = pygame.time.get_ticks()
 	for ev in pygame.event.get():
 		if ev.type == pygame.QUIT:
 			sys.exit()
@@ -341,3 +348,8 @@ while 1:
 	if not paused and ticks > last_piece_drop + FALL_SPEED:
 		tetris.attempt_action(lambda x: x.move(0, 1), lock_if_fail=True)
 		last_piece_drop = ticks
+
+	if ballrect.collidelist(collision_rects) != -1:
+		ballrect.move((-1 * speed[0], -1 * speed[1]))
+		speed[0] = random.randint(-4, 4)
+		speed[1] = random.randint(-4, 4)
