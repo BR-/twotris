@@ -260,9 +260,14 @@ while 1:
 		if color:
 			pygame.draw.rect(screen, color, (xx, yy, w, h))
 	# BOARD GRID
+	minx = min(sq[0] for sq in tetris.dropping_mino.get())
+	maxx = max(sq[0] for sq in tetris.dropping_mino.get())
 	for x in range(1, 10):
 			xx = 345 + (830 - 345) * x / 10
-			pygame.draw.line(screen, gray, (xx, 80), (xx, 953))
+			color = gray
+			if x == minx or x == maxx:
+				color = white
+			pygame.draw.line(screen, color, (xx, 80), (xx, 953))
 	for y in range(1, 20):
 			yy = 80 + (953 - 80) * y / 20
 			pygame.draw.line(screen, gray, (345, yy), (830, yy))
