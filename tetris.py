@@ -346,6 +346,14 @@ while 1:
 				tetris.hard_drop()
 			elif ev.key == pygame.K_LSHIFT or ev.key == pygame.K_c:
 				tetris.attempt_hold()
+			elif ev.key == pygame.K_r:
+				tetris = Tetris()
+				last_piece_drop = 0
+				lock_fail_count = 0
+				paused = False
+				dacus_left = None
+				dacus_right = None
+				dacus_down = None
 		elif ev.type == pygame.KEYUP:
 			if ev.key == pygame.K_LEFT:
 				dacus_left = None
