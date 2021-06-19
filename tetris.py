@@ -109,6 +109,7 @@ class Tetris:
 		self.hold = None
 		self.hold_available = False
 
+		self.score = 0
 		self.game_over = False
 
 	def drop_new_piece_in(self, piece=None):
@@ -143,6 +144,7 @@ class Tetris:
 					good = False
 					break
 			if good:
+				self.score += 1
 				for y2 in range(y-1, -1, -1):
 					for x in range(10):
 						self.board[x][y2+1] = self.board[x][y2]
@@ -168,6 +170,9 @@ class Tetris:
 				self.dropping_mino = backup
 				if lock_if_fail:
 					self.lock_in()
+					return True
+				return False
+		return True
 
 	def hard_drop(self):
 		if self.game_over:
@@ -204,15 +209,18 @@ black = 0, 0, 0
 gray = 100, 100, 100
 white = 255, 255, 255
 red = 100, 0, 0
+neonred = 255, 0, 0
 
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Twotris")
 
 ball = pygame.image.load("ball.png").convert()
+ball.set_colorkey(ball.get_at((0,0)))
 ballrect = ball.get_rect()
 
 tetris = Tetris()
 last_piece_drop = 0
+lock_fail_count = 0
 paused = False
 dacus_left = None
 dacus_right = None
@@ -282,7 +290,7 @@ while 1:
 		if y < 0:
 			color = False
 		else:
-			color = [False, gray, white][tetris.board[x][y] + 1]
+			color = [False, gray, white, neonred][tetris.board[x][y] + 1]
 		if color:
 			pygame.draw.rect(screen, color, (xx, yy, w, h))
 			collision_rects.append((xx, yy, w, h))
@@ -303,6 +311,8 @@ while 1:
 	pygame.draw.rect(screen, white, xyxy2rect(907, 58, 1041, 197), 3) # NEXT
 	pygame.draw.rect(screen, white, xyxy2rect(907, 197, 1041, 921), 3) # NEXT QUEUE
 	pygame.draw.rect(screen, white, xyxy2rect(200, 98, 309, 230), 3) # HOLD
+	# SCORE DISPLAY
+	screen.blit(myfont.render(f"Score: {tetris.score}", True, white), (124, 737))
 	pygame.display.flip()
 	for ev in pygame.event.get():
 		if ev.type == pygame.QUIT:
@@ -343,10 +353,13 @@ while 1:
 		tetris.attempt_action(lambda x: x.move(1, 0))
 		dacus_right = ticks + DACUS_REPEAT
 	if dacus_down is not None and ticks > dacus_down:
-		tetris.attempt_action(lambda x: x.move(0, 1))
+		tetris.attempt_action(lambda x: x.move(0, 1), lock_if_fail=True)
 		dacus_down = ticks + DACUS_REPEAT
 	if not paused and ticks > last_piece_drop + FALL_SPEED:
-		tetris.attempt_action(lambda x: x.move(0, 1), lock_if_fail=True)
+		if tetris.attempt_action(lambda x: x.move(0, 1), lock_if_fail=(lock_fail_count == 3)):
+			lock_fail_count = 0
+		else:
+			lock_fail_count += 1
 		last_piece_drop = ticks
 
 	if ballrect.collidelist(collision_rects) != -1:
