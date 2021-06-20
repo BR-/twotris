@@ -101,37 +101,40 @@ class Mino:
 	}
 
 def bag_rng():
+	questionmark = 0
 	bag = list(Mino.minos.keys())
 	while True:
 		random.shuffle(bag)
 		for mino in bag:
-			yield Mino(mino, Mino.minos[mino])
-		if random.random() < 0.2:
-			shape = [(0,0)]
-			for x in range(4):
-				for y in range(4):
-					if (x or y) and random.random() < 0.25:
-						shape.append((x,y))
-			yield Mino("?", shape)
+			score = (yield Mino(mino, Mino.minos[mino]))
+			questionmark += 1
+			if questionmark > (7 - score / 20):
+				questionmark = 0
+				if random.random() < 0.2 + 0.01 * max(0, score - 50):
+					shape = [(0,0)]
+					for x in range(4):
+						for y in range(4):
+							if (x or y) and random.random() < 0.25:
+								shape.append((x,y))
+					yield Mino("?", shape)
 
 class Tetris:
 	def __init__(self):
 		self.board = [[0] * 20 for _ in range(10)]
+		self.score = 0
+		self.game_over = False
 
 		self.piece_generator = bag_rng()
-		self.piece_queue = [next(self.piece_generator) for _ in range(7)]
+		self.piece_queue = [next(self.piece_generator)] + [self.piece_generator.send(0) for _ in range(6)]
 		self.drop_new_piece_in()
 
 		self.hold = None
 		self.hold_available = False
 
-		self.score = 0
-		self.game_over = False
-
 	def drop_new_piece_in(self, piece=None):
 		if piece is None:
 			piece = self.piece_queue.pop(0)
-			self.piece_queue.append(next(self.piece_generator))
+			self.piece_queue.append(self.piece_generator.send(self.score))
 		piece.reset()
 		self.dropping_mino = piece
 		self.dropping_mino.move(4, 0)
@@ -379,7 +382,7 @@ while 1:
 	if dacus_down is not None and ticks > dacus_down:
 		tetris.attempt_action(lambda x: x.move(0, 1), lock_if_fail=True)
 		dacus_down = ticks + DACUS_REPEAT
-	if not paused and ticks > last_piece_drop + FALL_SPEED:
+	if not paused and ticks > last_piece_drop + FALL_SPEED - min(tetris.score, 50):
 		if tetris.attempt_action(lambda x: x.move(0, 1), lock_if_fail=(lock_fail_count == 3)):
 			lock_fail_count = 0
 		else:
